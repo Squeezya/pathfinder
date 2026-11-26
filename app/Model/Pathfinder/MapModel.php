@@ -1497,11 +1497,14 @@ class MapModel extends AbstractMapTrackingModel {
         $activeUserCharactersData = $this->getCharactersData(['hasLog' => true]);
 
         // sort characters by "active" status
+        // character log data no longer carries "active" -> treat a missing value as active
         $sortByActiveLog = function($a, $b){
-            if($a->log->active == $b->log->active){
+            $aActive = $a->log->active ?? true;
+            $bActive = $b->log->active ?? true;
+            if($aActive == $bActive){
                 return 0;
             }else{
-                return ($a->log->active && !$b->log->active) ? 0 : 1;
+                return ($aActive && !$bActive) ? 0 : 1;
             }
         };
 
