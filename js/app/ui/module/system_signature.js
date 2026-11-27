@@ -511,13 +511,8 @@ define([
                     });
 
                     let tdEl = $('<td/>', {colspan: tableApi.columns(':visible').count()}).html(
-                        `<div class="flex-row flex-between">` +
-                            `<span class="flex-col flex-grow">` +
-                                `<i class="fas fa-fw ${collapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i>&nbsp;` +
-                                `${module.getGroupLabelById(groupId) || 'No group'}` +
-                            `</span>` +
-                            `<span class="flex-col">${rows.count()}</span>` +
-                        `</div>`
+                        `<i class="fas fa-fw ${collapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i>&nbsp;` +
+                        `${module.getGroupLabelById(groupId) || 'No group'} (${rows.count()})`
                     );
 
                     return $('<tr/>', {'data-group-id': groupId})
