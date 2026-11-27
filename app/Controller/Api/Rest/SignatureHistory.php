@@ -87,6 +87,7 @@ class SignatureHistory extends AbstractRestController {
                             'connectionId'  => (int)$signatureData->connectionId,
                             'name'          => (string)$signatureData->name,
                             'description'   => (string)$signatureData->description,
+                            'anomaly'       => isset($signatureData->anomaly) ? (bool)$signatureData->anomaly : null,
                         ];
 
                         $signature = $system->getSignatureById($data['id']);
