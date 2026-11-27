@@ -2150,9 +2150,12 @@ define([
 
             // event listener for global "paste" signatures into the page
             $(this.moduleElement).on('pf:updateSystemSignatureModuleByClipboard', (e, clipboard) => {
+                // "lazy delete" also deletes connections linked to removed signatures
+                // -> same as "signature reader" with both checkboxes ticked
+                let lazyDelete = this.getLazyUpdateToggleStatus();
                 let signatureOptions = {
-                    deleteOld: this.getLazyUpdateToggleStatus(),
-                    deleteConnection: 0
+                    deleteOld: lazyDelete,
+                    deleteConnection: lazyDelete
                 };
 
                 // "disable" lazy update icon -> prevents accidental removal for next paste #724
