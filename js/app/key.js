@@ -69,6 +69,11 @@ define([
             group:      'map',
             label:      'Delete selected systems',
             keyNames:   ['CONTROL', 'D']
+        },
+        mapMaximize: {
+            group:      'map',
+            label:      'Maximize map / restore size',
+            keyNames:   ['ALT', 'M']
         }
     };
 
