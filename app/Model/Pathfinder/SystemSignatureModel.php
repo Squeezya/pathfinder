@@ -78,6 +78,13 @@ class SystemSignatureModel extends AbstractMapTrackingModel {
             'nullable' => false,
             'default' => '',
             'activity-log' => true
+        ],
+        // from the scan paste: 1 = "Cosmic Anomaly" (no probes needed), 0 = "Cosmic Signature",
+        // NULL = unknown (added manually or pasted before this field existed) -> client decides by group
+        'anomaly' => [
+            'type' => Schema::DT_BOOL,
+            'nullable' => true,
+            'default' => null
         ]
     ];
 
@@ -86,7 +93,7 @@ class SystemSignatureModel extends AbstractMapTrackingModel {
      * @param  $data
      */
     public function setData( array $data): void{
-        $this->copyfrom($data, ['name', 'groupId', 'typeId', 'description', 'connectionId']);
+        $this->copyfrom($data, ['name', 'groupId', 'typeId', 'description', 'connectionId', 'anomaly']);
     }
 
     /**
@@ -104,6 +111,7 @@ class SystemSignatureModel extends AbstractMapTrackingModel {
         $signatureData->typeId                      = $this->typeId;
         $signatureData->name                        = $this->name;
         $signatureData->description                 = $this->description;
+        $signatureData->anomaly                     = is_null($this->anomaly) ? null : (bool)$this->anomaly;
 
         if($connection = $this->getConnection()){
             $signatureData->connection              = (object) [];
