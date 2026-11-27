@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "../../colors";
 @use "../main"; // @extend .pf-dialog-icon-button
 
@@ -42,13 +43,18 @@
       }
     }
 
-    td.pf-sig-table-scannable::after {
-      content: "\f7c0"; // fa-satellite-dish
-      color: colors.$teal-lightest;
+    // ID text: scannable white, anomaly grey
+    td.pf-sig-table-scannable {
+      color: colors.$white;
+
+      &::after {
+        content: "\f7c0"; // fa-satellite-dish
+        color: colors.$teal-lightest;
+      }
     }
 
     td.pf-sig-table-anomaly {
-      color: colors.$gray-lighter;
+      color: color.adjust(colors.$gray-lighter, $lightness: -15%);
 
       &::after {
         content: "\f06e"; // fa-eye
