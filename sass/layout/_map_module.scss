@@ -259,6 +259,26 @@ $mapModuleGridRowMinHeight: 38px;
         cursor: row-resize;
       }
 
+      // map expanded to the full browser window (toggled by JS)
+      // -> z-index stays below tooltips, popovers, context menus and dialogs (they are attached to <body>)
+      &.pf-map-tab-content-area-maximized {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        width: auto !important;
+        height: auto !important; // overwrites the stored (inline) map height
+        max-height: none;
+        resize: none;
+        border-radius: 0;
+
+        &:before {
+          display: none; // hide resize handle
+        }
+      }
+
       &:focus, &:hover {
         border: 1px solid colors.$gray;
 
@@ -403,4 +423,8 @@ $mapModuleGridRowMinHeight: 38px;
 // "Fake" spacer module -> preserves height during hide -> show animation for a module
 .pf-module-spacer {
   margin-bottom: 10px; // same as .pf-module -> no UI jump
+}
+// no page scrollbar behind a maximized map
+[canvas=container]:has(.pf-map-tab-content-area-maximized) {
+  overflow: hidden;
 }

@@ -21,6 +21,8 @@ define([
         mapGridClass: 'pf-grid-small',                                  // class for map grid snapping
         systemRegionClass: 'pf-map-region',                             // class for systems regions on map
         systemCompactClass: 'pf-map-compact',                           // class for compact systems on map
+        mapAreaMaximizedClass: 'pf-map-tab-content-area-maximized',     // class for a map area expanded to the full browser window
+        mapMaximizeIconClass: 'pf-map-overlay-maximize-icon',           // class for the "maximize map" overlay icon
 
         systemIdPrefix: 'pf-system-',                                   // id prefix for a system
         systemClass: 'pf-system',                                       // class for all systems
@@ -1696,6 +1698,35 @@ define([
     };
 
     /**
+     * expand a map area to the full browser window, or restore it to its normal size
+     * -> the stored map height is not touched (it is read from the inline style, not the computed size)
+     * @param areaMap
+     * @param maximize  true/false, or toggle if not set
+     */
+    let toggleMapMaximized = (areaMap, maximize) => {
+        areaMap = $(areaMap);
+        if(typeof maximize !== 'boolean'){
+            maximize = !areaMap.hasClass(config.mapAreaMaximizedClass);
+        }
+
+        areaMap.toggleClass(config.mapAreaMaximizedClass, maximize);
+        areaMap.find('.' + config.mapMaximizeIconClass)
+            .toggleClass('fa-expand', !maximize)
+            .toggleClass('fa-compress', maximize)
+            .attr('data-original-title', maximize ? 'restore map size (Esc)' : 'maximize map');
+
+        // "Esc" restores the map, unless a dialog is open (Esc closes the dialog first)
+        $(document).off('keydown.pfMapMaximize');
+        if(maximize){
+            $(document).on('keydown.pfMapMaximize', e => {
+                if(e.key === 'Escape' && !$('.modal.in').length){
+                    toggleMapMaximized(areaMap, false);
+                }
+            });
+        }
+    };
+
+    /**
      * set map "shortcut" events
      */
     $.fn.setMapShortcuts = function(){
@@ -1714,6 +1745,10 @@ define([
 
             areaMap.watchKey('mapSystemsSelect', areaMap => {
                 mapElement.selectAllSystems();
+            },{focus: true});
+
+            areaMap.watchKey('mapMaximize', areaMap => {
+                toggleMapMaximized(areaMap);
             },{focus: true});
 
             areaMap.watchKey('mapSystemsDelete', areaMap => {
@@ -2223,6 +2258,7 @@ define([
 
     return {
         config: config,
+        toggleMapMaximized: toggleMapMaximized,
         setMapInstance: setMapInstance,
         getMapInstance: getMapInstance,
         existsMapInstance: existsMapInstance,
