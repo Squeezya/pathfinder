@@ -1700,16 +1700,46 @@ define([
     /**
      * expand a map area to the full browser window, or restore it to its normal size
      * -> the stored map height is not touched (it is read from the inline style, not the computed size)
+     * -> a maximized map is zoomed so its full height fits the window. The previous zoom is restored afterwards
      * @param areaMap
      * @param maximize  true/false, or toggle if not set
      */
     let toggleMapMaximized = (areaMap, maximize) => {
         areaMap = $(areaMap);
+        let isMaximized = areaMap.hasClass(config.mapAreaMaximizedClass);
         if(typeof maximize !== 'boolean'){
-            maximize = !areaMap.hasClass(config.mapAreaMaximizedClass);
+            maximize = !isMaximized;
+        }
+        if(maximize === isMaximized){
+            return;
         }
 
+        let mapElement = areaMap.find('.' + Util.config.mapClass);
+        let map = getMapInstance(mapElement.data('id'));
+
         areaMap.toggleClass(config.mapAreaMaximizedClass, maximize);
+
+        if(map){
+            if(maximize){
+                areaMap.data('zoomBeforeMaximize', map.getZoom());
+
+                // scrollbar wrapper takes the new (window) height
+                areaMap.mCustomScrollbar('update');
+                let wrapperHeight = areaMap.find('.mCSB_container_wrapper').outerHeight();
+                let mapHeight = mapElement.outerHeight(); // unscaled map height
+                if(wrapperHeight && mapHeight){
+                    let zoom = Math.floor(wrapperHeight / mapHeight * 100) / 100;
+                    setZoom(map, Math.min(Math.max(zoom, config.zoomMin), config.zoomMax));
+                }
+            }else{
+                let zoom = areaMap.data('zoomBeforeMaximize');
+                areaMap.removeData('zoomBeforeMaximize');
+                areaMap.mCustomScrollbar('update');
+                if(zoom){
+                    setZoom(map, zoom);
+                }
+            }
+        }
         areaMap.find('.' + config.mapMaximizeIconClass)
             .toggleClass('fa-expand', !maximize)
             .toggleClass('fa-compress', maximize)

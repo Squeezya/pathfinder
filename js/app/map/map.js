@@ -2536,6 +2536,11 @@ define([
             newJsPlumbInstance.bind('zoom', function(zoom){
                 MapOverlay.updateZoomOverlay(this);
 
+                // a maximized map is zoomed to fit the window -> do not store that zoom level
+                if($(this.getContainer()).closest('.' + MapUtil.config.mapAreaMaximizedClass).length){
+                    return;
+                }
+
                 // store new zoom level in IndexDB
                 if(zoom === 1){
                     Util.getLocalStore('map').removeItem(`${mapId}.mapZoom`);
