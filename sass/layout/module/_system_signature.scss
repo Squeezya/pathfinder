@@ -88,6 +88,16 @@
     .fa-plus {
       @extend .pf-dialog-icon-button;
     }
+
+    // signature group header rows -> click to collapse/expand a group
+    tr.pf-sig-group-row {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    tr.pf-sig-row-collapsed {
+      display: none;
+    }
   }
 
   .pf-sig-table-secondary {
