@@ -107,7 +107,7 @@ class CcpSystemsUpdate extends AbstractCron {
 
         $total = count($systemIds);
         $offset = (($params['offset'] ?? 0) > 0 && ($params['offset'] ?? 0) < $total) ? $params['offset'] : 0;
-        $systemIds = array_slice($systemIds, $offset, $params['length'] ?? 0);
+        $systemIds = array_slice($systemIds, $offset, $params['length'] ?? null);
         $importCount = count($systemIds);
         $count = 0;
 
