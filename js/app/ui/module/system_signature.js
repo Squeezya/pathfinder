@@ -491,13 +491,59 @@ define([
             new $.fn.dataTable.Responsive(tableApi);
 
             // "RowGroup" Datatables Plugin -> one header row per signature group
+            // -> click a header row to collapse/expand its group. Collapsed groups are stored per character
+            let collapsedGroups = new Set();
+            let collapsedGroupsKey = 'collapsedSignatureGroups';
+
             new $.fn.dataTable.RowGroup(tableApi, {
                 dataSrc: 'groupId',
                 startRender: (rows, groupId) => {
-                    return `<div class="flex-row flex-between">` +
-                                `<span class="flex-col flex-grow">${module.getGroupLabelById(groupId) || 'No group'}</span>` +
-                                `<span class="flex-col">${rows.count()}</span>` +
-                            `</div>`;
+                    groupId = parseInt(groupId) || 0;
+                    let collapsed = collapsedGroups.has(groupId);
+
+                    // hide/show signature rows of this group (and their "Responsive" child rows)
+                    rows.nodes().each(rowEl => {
+                        rowEl.classList.toggle(module._config.sigTableRowCollapsedClass, collapsed);
+                        let childRowEl = rowEl.nextElementSibling;
+                        if(childRowEl && childRowEl.classList.contains('child')){
+                            childRowEl.classList.toggle(module._config.sigTableRowCollapsedClass, collapsed);
+                        }
+                    });
+
+                    let tdEl = $('<td/>', {colspan: tableApi.columns(':visible').count()}).html(
+                        `<div class="flex-row flex-between">` +
+                            `<span class="flex-col flex-grow">` +
+                                `<i class="fas fa-fw ${collapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i>&nbsp;` +
+                                `${module.getGroupLabelById(groupId) || 'No group'}` +
+                            `</span>` +
+                            `<span class="flex-col">${rows.count()}</span>` +
+                        `</div>`
+                    );
+
+                    return $('<tr/>', {'data-group-id': groupId})
+                        .addClass(module._config.sigTableGroupRowClass)
+                        .toggleClass(module._config.sigTableGroupCollapsedClass, collapsed)
+                        .append(tdEl);
+                }
+            });
+
+            $(primaryTableEl).on('click', 'tr.' + module._config.sigTableGroupRowClass, function(){
+                let groupId = parseInt(this.dataset.groupId) || 0;
+                if(collapsedGroups.has(groupId)){
+                    collapsedGroups.delete(groupId);
+                }else{
+                    collapsedGroups.add(groupId);
+                    // hidden signatures should not be part of a "delete selected" action
+                    tableApi.rows((idx, data) => (parseInt(data.groupId) || 0) === groupId).deselect();
+                }
+                Util.getLocalStore('character').setItem(`${Util.getCurrentCharacterId()}.${collapsedGroupsKey}`, [...collapsedGroups]);
+                tableApi.draw(false);
+            });
+
+            Util.getLocalStore('character').getItem(Util.getCurrentCharacterId()).then(data => {
+                if(data && Array.isArray(data[collapsedGroupsKey]) && data[collapsedGroupsKey].length){
+                    data[collapsedGroupsKey].forEach(groupId => collapsedGroups.add(parseInt(groupId) || 0));
+                    tableApi.draw(false);
                 }
             });
 
@@ -2218,7 +2264,7 @@ define([
 
             if(Array.isArray(offset)){
                 // DOM index of a row among signature rows only (skip "RowGroup" header rows)
-                let dataRowIndex = rowEl => $(rowEl).closest('tbody').children('tr:not(.dtrg-group)').index(rowEl);
+                let dataRowIndex = rowEl => $(rowEl).closest('tbody').children('tr:not(.dtrg-group):not(.pf-sig-row-collapsed)').index(rowEl);
 
                 /**
                  * check if cellIndex is out of table range
@@ -3497,6 +3543,9 @@ define([
         sigTableSecondaryClass: 'pf-sig-table-secondary',                       // class for secondary sig table
         sigTableInfoClass: 'pf-sig-table-info',                                 // class for info sig table
         sigTableRowIdPrefix: 'pf-sig-row_',                                     // id prefix for table rows
+        sigTableGroupRowClass: 'pf-sig-group-row',                              // class for signature group header rows
+        sigTableGroupCollapsedClass: 'pf-sig-group-collapsed',                  // class for collapsed signature group header rows
+        sigTableRowCollapsedClass: 'pf-sig-row-collapsed',                      // class for signature rows hidden by a collapsed group
 
         sigTableEditSigNameInput: 'pf-sig-table-edit-name-input',               // class for editable fields (sig name)
 
