@@ -221,6 +221,8 @@ define([
             this._bodyEl.append(primaryTableEl);
 
             let dataTableOptions = {
+                // rows always stay grouped by signature group; user sorting applies within a group
+                orderFixed: {pre: [[10, 'asc']]},
                 select: {
                     style: 'os',
                     selector: 'td:not(.' + module._config.tableCellActionClass + ')'
@@ -487,6 +489,17 @@ define([
             // "Responsive" dataTables plugin did not load automatic (because table is invisible onInit)
             // -> manually start "Responsive" extension -> see default dataTable setting for config e.g. breakpoints
             new $.fn.dataTable.Responsive(tableApi);
+
+            // "RowGroup" Datatables Plugin -> one header row per signature group
+            new $.fn.dataTable.RowGroup(tableApi, {
+                dataSrc: 'groupId',
+                startRender: (rows, groupId) => {
+                    return `<div class="flex-row flex-between">` +
+                                `<span class="flex-col flex-grow">${module.getGroupLabelById(groupId) || 'No group'}</span>` +
+                                `<span class="flex-col">${rows.count()}</span>` +
+                            `</div>`;
+                }
+            });
 
             // "Select" Datatables Plugin
             tableApi.select();
@@ -994,6 +1007,17 @@ define([
                                     return '<i class="fas fa-question-circle"></i>';
                                 }
                             }
+                        }
+                    },{
+                        targets: 10,
+                        name: 'groupOrder',
+                        className: 'never',     // never show this column. see: https://datatables.net/extensions/responsive/classes
+                        visible: false,
+                        searchable: false,
+                        data: 'groupId',
+                        defaultContent: 0,
+                        render: {
+                            sort: groupId => SystemSignatureModule.getGroupOrder(groupId)
                         }
                     },{
                         targets: 9,
@@ -2208,6 +2232,9 @@ define([
             }
 
             if(Array.isArray(offset)){
+                // DOM index of a row among signature rows only (skip "RowGroup" header rows)
+                let dataRowIndex = rowEl => $(rowEl).closest('tbody').children('tr:not(.dtrg-group)').index(rowEl);
+
                 /**
                  * check if cellIndex is out of table range
                  * @param tableApi
@@ -2222,9 +2249,9 @@ define([
                         cellIndex[0] = 0; // first column
                     }
                     if(cellIndex[1] < 0){
-                        cellIndex[1] = tableApi.row(':last', {search: 'applied'}).nodes().to$().index(); // last row
+                        cellIndex[1] = dataRowIndex(tableApi.row(':last', {search: 'applied'}).node()); // last row
                     }
-                    if(cellIndex[1] > tableApi.row(':last', {search: 'applied'}).nodes().to$().index()){
+                    if(cellIndex[1] > dataRowIndex(tableApi.row(':last', {search: 'applied'}).node())){
                         cellIndex[1] = 0; // first row
                     }
                     return cellIndex;
@@ -2241,7 +2268,7 @@ define([
                     // we need to get the current cell indexes from DOM (not internal DataTables indexes)
                     let nodeOrig = cellOrigin.nodes();
                     let colIndex = nodeOrig.to$().index();
-                    let rowIndex = nodeOrig.to$().closest('tr').index();
+                    let rowIndex = dataRowIndex(nodeOrig.to$().closest('tr')[0]);
                     let currentCellIndex = [colIndex, rowIndex];
                     let newCellIndex = currentCellIndex.map((index, i) => index + offset[i]);
                     // check if cell index is inside table dimensions
@@ -3414,6 +3441,19 @@ define([
         '宇宙の特異点',
         '异常空间'
     ];
+
+    /**
+     * position of a signature group in the grouped signature table
+     * -> signatures without a group (not scanned yet) first, anomalies (Combat, Ore) last
+     * @param groupId
+     * @returns {number}
+     */
+    SystemSignatureModule.getGroupOrder = groupId => {
+        let index = SystemSignatureModule.groupOrder.indexOf(parseInt(groupId) || 0);
+        return index === -1 ? SystemSignatureModule.groupOrder.length : index;
+    };
+
+    SystemSignatureModule.groupOrder = [0, 5, 2, 3, 4, 7, 1, 6];               // none, Wormhole, Relic, Data, Gas, Ghost, Combat, Ore
 
     SystemSignatureModule.emptySignatureData = {
         id: 0,
