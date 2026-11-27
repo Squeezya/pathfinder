@@ -28,6 +28,34 @@
   }
 
   .pf-sig-table {
+    // "id" cell icon: signature that needs probes vs anomaly (no probes needed)
+    td.pf-sig-table-scannable,
+    td.pf-sig-table-anomaly {
+      white-space: nowrap;
+
+      &::after {
+        margin-left: 4px;
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        font-size: 9px;
+        vertical-align: middle;
+      }
+    }
+
+    td.pf-sig-table-scannable::after {
+      content: "\f7c0"; // fa-satellite-dish
+      color: colors.$teal-lightest;
+    }
+
+    td.pf-sig-table-anomaly {
+      color: colors.$gray-lighter;
+
+      &::after {
+        content: "\f06e"; // fa-eye
+        color: colors.$gray-light;
+      }
+    }
+
     // textarea field
     // overwrite some styles in order to make <textarea> 100% width
     .editable-container.editable-inline {

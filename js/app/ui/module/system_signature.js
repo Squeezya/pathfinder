@@ -1154,9 +1154,23 @@ define([
                         }
                     });
                 },
-                rowCallback: function(){
+                rowCallback: function(row, rowData){
                     let tableApi = this.api();
                     let time = Math.floor((new Date()).getTime());
+
+                    // mark signatures that need probes vs anomalies (visible without probes)
+                    let idCell = tableApi.cell(row, 'id:name').node();
+                    if(idCell){
+                        let hasSig = !!(rowData && rowData.id);
+                        let isAnomaly = hasSig && SystemSignatureModule.isAnomaly(rowData);
+                        idCell.classList.toggle(module._config.sigTableCellAnomalyClass, isAnomaly);
+                        idCell.classList.toggle(module._config.sigTableCellScannableClass, hasSig && !isAnomaly);
+                        if(hasSig){
+                            let title = (rowData.name || '').toUpperCase() + ' - ' +
+                                (isAnomaly ? 'anomaly (no probes needed)' : 'signature (scan with probes)');
+                            $(idCell).attr('title', title).tooltip('fixTitle');
+                        }
+                    }
 
                     tableApi.cells(null, ['updated:name']).every(function(rowIndex, colIndex, tableLoopCount, cellLoopCount){
                         let cell = this;
@@ -1340,7 +1354,8 @@ define([
                                 name: $.trim(rowData[0]).toLowerCase(),
                                 groupId: sigGroupId,
                                 typeId: typeId,
-                                description: sigDescription
+                                description: sigDescription,
+                                anomaly: SystemSignatureModule.anomalySignatureNames.includes(rowData[1])
                             };
 
                             signatureData.push(signatureObj);
@@ -3374,6 +3389,32 @@ define([
         '空间信号'                                                                  // zh: "Cosmic Signature"
     ];
 
+    /**
+     * check if a signature is an anomaly (visible without probes) or needs probing
+     * -> the scan paste ("Cosmic Anomaly" vs "Cosmic Signature") wins when known
+     * -> otherwise decide by group: combat + ore sites are anomalies,
+     *    relic, data, gas, ghost and wormhole sites (and unknown groups) need probes
+     * @param signatureData
+     * @returns {boolean}
+     */
+    SystemSignatureModule.isAnomaly = signatureData => {
+        if(typeof signatureData.anomaly === 'boolean'){
+            return signatureData.anomaly;
+        }
+        return SystemSignatureModule.anomalyGroupIds.includes(parseInt(signatureData.groupId) || 0);
+    };
+
+    SystemSignatureModule.anomalyGroupIds = [1, 6];                             // Combat, Ore
+
+    SystemSignatureModule.anomalySignatureNames = [                             // "Cosmic Anomaly" in each client language
+        'Cosmic Anomaly',
+        'Kosmische Anomalie',
+        'Космическая аномалия',
+        'Anomalie cosmique',
+        '宇宙の特異点',
+        '异常空间'
+    ];
+
     SystemSignatureModule.emptySignatureData = {
         id: 0,
         name: '',
@@ -3457,6 +3498,8 @@ define([
         sigTableSecondaryClass: 'pf-sig-table-secondary',                       // class for secondary sig table
         sigTableInfoClass: 'pf-sig-table-info',                                 // class for info sig table
         sigTableRowIdPrefix: 'pf-sig-row_',                                     // id prefix for table rows
+        sigTableCellScannableClass: 'pf-sig-table-scannable',                   // class for "id" cell of a signature that needs probes
+        sigTableCellAnomalyClass: 'pf-sig-table-anomaly',                       // class for "id" cell of an anomaly (no probes needed)
 
         sigTableEditSigNameInput: 'pf-sig-table-edit-name-input',               // class for editable fields (sig name)
 
