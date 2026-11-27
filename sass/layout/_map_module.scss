@@ -424,7 +424,11 @@ $mapModuleGridRowMinHeight: 38px;
 .pf-module-spacer {
   margin-bottom: 10px; // same as .pf-module -> no UI jump
 }
-// no page scrollbar behind a maximized map
+// page canvas while a map is maximized
+// -> Slidebars sets transform: translate(0, 0) on [canvas]. Any transform makes the canvas the containing block for
+//    position: fixed children, so the "maximized" map would get the full page height instead of the window height
+// -> no page scrollbar behind the map
 [canvas=container]:has(.pf-map-tab-content-area-maximized) {
+  transform: none;
   overflow: hidden;
 }
