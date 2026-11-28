@@ -27,6 +27,11 @@
                 <ul id="{{ userLocationId }}" class="pf-head-breadcrumb">{{! will be filled with current user location history }}</ul>
             </div>
 
+            <p class="navbar-text pf-head-map-center">
+                <i id="{{mapCenterId}}" class="fas fa-fw fa-crosshairs" title="center map on my system"></i>
+                <i id="{{mapAutoCenterId}}" class="fas fa-fw fa-location-arrow" title="auto center map on system change"></i>
+            </p>
+
             <p class="navbar-text txt-color txt-color-red pf-head-program-status" title="connection status">
                 <i class="fas fa-fw fa-bolt"></i>
                 <span>offline</span>

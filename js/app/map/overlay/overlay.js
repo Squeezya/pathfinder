@@ -859,48 +859,6 @@ define([
     };
 
     /**
-     * init "location" overlay
-     * -> center the map on the system the current character is in, once or automatically on each system change
-     * @param mapElement
-     * @returns {*}
-     */
-    let initLocationOverlay = mapElement => {
-        let tooltipOptions = {
-            placement: 'right',
-            container: 'body',
-            delay: 150
-        };
-
-        let centerIcon = $('<i>', {
-            class: ['fas', 'fa-fw', 'fa-crosshairs'].join(' ')
-        }).attr('title', 'center on my system').tooltip(tooltipOptions).on('click', () => {
-            if(!MapUtil.centerMapOnCurrentSystem(mapElement)){
-                Util.showNotify({title: 'Center on my system', text: 'Your current system is not on this map', type: 'info'});
-            }
-        });
-
-        let autoCenterIcon = $('<i>', {
-            class: ['fas', 'fa-fw', 'fa-location-arrow', MapUtil.config.mapAutoCenterIconClass].join(' ')
-        }).attr('title', 'auto center on system change').tooltip(tooltipOptions).on('click', e => {
-            MapUtil.setMapAutoCenter(mapElement, !$(e.currentTarget).hasClass('active'));
-        });
-
-        // restore stored "auto center" state
-        let mapId = mapElement.data('id');
-        if(mapId){
-            Util.getLocalStore('map').getItem(mapId).then(data => {
-                if(data && data.autoCenter){
-                    MapUtil.setMapAutoCenter(mapElement, true, false);
-                }
-            });
-        }
-
-        return $('<div>', {
-            class: [MapOverlayUtil.config.mapOverlayClass, MapOverlayUtil.config.mapOverlayLocationClass].join(' ')
-        }).append(centerIcon, autoCenterIcon);
-    };
-
-    /**
      * init all map overlays on a "parent" element
      * @returns {*}
      */
@@ -915,8 +873,6 @@ define([
 
 
             parentElement.append(initZoomOverlay());
-
-            parentElement.append(initLocationOverlay(parentElement.find('.' + Util.config.mapClass)));
 
             parentElement.append(initMaximizeOverlay());
 
