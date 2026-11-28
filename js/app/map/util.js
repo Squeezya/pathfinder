@@ -21,7 +21,6 @@ define([
         mapGridClass: 'pf-grid-small',                                  // class for map grid snapping
         systemRegionClass: 'pf-map-region',                             // class for systems regions on map
         systemCompactClass: 'pf-map-compact',                           // class for compact systems on map
-        mapAutoCenterIconClass: 'pf-map-overlay-auto-center-icon',      // class for the "auto center on my system" overlay icon
 
         systemIdPrefix: 'pf-system-',                                   // id prefix for a system
         systemClass: 'pf-system',                                       // class for all systems
@@ -1724,34 +1723,33 @@ define([
     };
 
     /**
-     * enable/disable "auto center on my system" for a map
-     * -> stored per map in local storage
-     * @param mapElement
+     * "auto center on my system" status (header toggle)
+     * -> one setting for all maps, stored per character
+     * @type {boolean}
+     */
+    let autoCenterEnabled = false;
+
+    /**
+     * enable/disable "auto center on my system"
      * @param enabled
      * @param store
      */
-    let setMapAutoCenter = (mapElement, enabled, store = true) => {
-        mapElement = $(mapElement);
-        let mapId = mapElement.data('id');
-        enabled = Boolean(enabled);
+    let setAutoCenter = (enabled, store = true) => {
+        autoCenterEnabled = Boolean(enabled);
+        $('#' + Util.config.headMapAutoCenterId).toggleClass('active', autoCenterEnabled);
 
-        mapElement.data('autoCenter', enabled);
-        // forget the last centered system -> center right away
-        mapElement.removeData('autoCenterSystemId');
+        // forget the last centered systems -> center right away
+        $('.' + Util.config.mapClass).removeData('autoCenterSystemId');
 
-        mapElement.closest('.' + Util.getMapTabContentAreaClass('map'))
-            .find('.' + config.mapAutoCenterIconClass).toggleClass('active', enabled);
-
-        if(store && mapId){
-            if(enabled){
-                Util.getLocalStore('map').setItem(`${mapId}.autoCenter`, true);
-            }else{
-                Util.getLocalStore('map').removeItem(`${mapId}.autoCenter`);
-            }
+        if(store){
+            Util.getLocalStore('character').setItem(`${Util.getCurrentCharacterId()}.autoCenterMap`, autoCenterEnabled);
         }
 
-        if(enabled){
-            autoCenterMap(mapElement);
+        if(autoCenterEnabled){
+            let activeMap = Util.getMapModule().getActiveMap();
+            if(activeMap){
+                autoCenterMap(activeMap);
+            }
         }
     };
 
@@ -1763,7 +1761,7 @@ define([
      */
     let autoCenterMap = mapElement => {
         mapElement = $(mapElement);
-        if(!mapElement.data('autoCenter')){
+        if(!autoCenterEnabled){
             return;
         }
 
@@ -2304,7 +2302,7 @@ define([
     return {
         config: config,
         centerMapOnCurrentSystem: centerMapOnCurrentSystem,
-        setMapAutoCenter: setMapAutoCenter,
+        setAutoCenter: setAutoCenter,
         autoCenterMap: autoCenterMap,
         setMapInstance: setMapInstance,
         getMapInstance: getMapInstance,
