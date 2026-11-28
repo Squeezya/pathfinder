@@ -21,6 +21,8 @@ define([
         mapGridClass: 'pf-grid-small',                                  // class for map grid snapping
         systemRegionClass: 'pf-map-region',                             // class for systems regions on map
         systemCompactClass: 'pf-map-compact',                           // class for compact systems on map
+        mapAreaMaximizedClass: 'pf-map-tab-content-area-maximized',     // class for a map area expanded to the full browser window
+        mapMaximizeIconClass: 'pf-map-overlay-maximize-icon',           // class for the "maximize map" overlay icon
 
         systemIdPrefix: 'pf-system-',                                   // id prefix for a system
         systemClass: 'pf-system',                                       // class for all systems
@@ -1696,6 +1698,94 @@ define([
     };
 
     /**
+     * expand a map area to the full browser window, or restore it to its normal size
+     * -> the stored map height is not touched (it is read from the inline style, not the computed size)
+     * -> a maximized map is zoomed so its full height fits the window. The previous zoom is restored afterwards
+     * @param areaMap
+     * @param maximize  true/false, or toggle if not set
+     */
+    let toggleMapMaximized = (areaMap, maximize) => {
+        areaMap = $(areaMap);
+        let isMaximized = areaMap.hasClass(config.mapAreaMaximizedClass);
+        if(typeof maximize !== 'boolean'){
+            maximize = !isMaximized;
+        }
+        if(maximize === isMaximized){
+            return;
+        }
+
+        let mapElement = areaMap.find('.' + Util.config.mapClass);
+        let map = getMapInstance(mapElement.data('id'));
+
+        // current scroll offset (px) and view center (unscaled map coordinates)
+        let container = areaMap.find('.mCSB_container');
+        let getScrollOffset = () => ({x: -container[0].offsetLeft || 0, y: -container[0].offsetTop || 0});
+        let scrollTo = offset => Scrollbar.scrollToPosition(areaMap, [Math.max(0, offset.y), Math.max(0, offset.x)], {
+            scrollInertia: 0,
+            timeout: 0
+        });
+        let scrollOffset = getScrollOffset();
+
+        if(map && maximize){
+            // remember the view -> restored when the map goes back to its normal size
+            areaMap.data('viewBeforeMaximize', {zoom: map.getZoom(), scrollOffset: scrollOffset});
+        }
+
+        let viewCenter = map && container.length ? {
+            x: (scrollOffset.x + container.parent().width() / 2) / map.getZoom(),
+            y: (scrollOffset.y + container.parent().height() / 2) / map.getZoom()
+        } : null;
+
+        areaMap.toggleClass(config.mapAreaMaximizedClass, maximize);
+
+        if(map){
+            // scrollbar wrapper takes the new size
+            areaMap.mCustomScrollbar('update');
+
+            if(maximize){
+                let wrapperHeight = areaMap.find('.mCSB_container_wrapper').outerHeight();
+                let mapHeight = mapElement.outerHeight(); // unscaled map height
+                if(wrapperHeight && mapHeight){
+                    let zoom = Math.floor(wrapperHeight / mapHeight * 100) / 100;
+                    setZoom(map, Math.min(Math.max(zoom, config.zoomMin), config.zoomMax));
+                }
+
+                // keep the same part of the map in the middle of the view
+                if(viewCenter){
+                    let zoom = map.getZoom();
+                    scrollTo({
+                        x: viewCenter.x * zoom - container.parent().width() / 2,
+                        y: viewCenter.y * zoom - container.parent().height() / 2
+                    });
+                }
+            }else{
+                let view = areaMap.data('viewBeforeMaximize');
+                areaMap.removeData('viewBeforeMaximize');
+                if(view){
+                    setZoom(map, view.zoom);
+                    // back to the exact view from before maximizing
+                    scrollTo(view.scrollOffset);
+                }
+            }
+        }
+
+        areaMap.find('.' + config.mapMaximizeIconClass)
+            .toggleClass('fa-expand', !maximize)
+            .toggleClass('fa-compress', maximize)
+            .attr('data-original-title', maximize ? 'restore map size (Esc)' : 'maximize map');
+
+        // "Esc" restores the map, unless a dialog is open (Esc closes the dialog first)
+        $(document).off('keydown.pfMapMaximize');
+        if(maximize){
+            $(document).on('keydown.pfMapMaximize', e => {
+                if(e.key === 'Escape' && !$('.modal.in').length){
+                    toggleMapMaximized(areaMap, false);
+                }
+            });
+        }
+    };
+
+    /**
      * set map "shortcut" events
      */
     $.fn.setMapShortcuts = function(){
@@ -1714,6 +1804,10 @@ define([
 
             areaMap.watchKey('mapSystemsSelect', areaMap => {
                 mapElement.selectAllSystems();
+            },{focus: true});
+
+            areaMap.watchKey('mapMaximize', areaMap => {
+                toggleMapMaximized(areaMap);
             },{focus: true});
 
             areaMap.watchKey('mapSystemsDelete', areaMap => {
@@ -2223,6 +2317,7 @@ define([
 
     return {
         config: config,
+        toggleMapMaximized: toggleMapMaximized,
         setMapInstance: setMapInstance,
         getMapInstance: getMapInstance,
         existsMapInstance: existsMapInstance,

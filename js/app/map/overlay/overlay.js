@@ -838,6 +838,27 @@ define([
     };
 
     /**
+     * init "maximize map" overlay -> expand the map to the full browser window and back
+     * @returns {*}
+     */
+    let initMaximizeOverlay = () => {
+        return $('<div>', {
+            class: [MapOverlayUtil.config.mapOverlayClass, MapOverlayUtil.config.mapOverlayMaximizeClass].join(' ')
+        }).append(
+            $('<i>', {
+                class: ['fas', 'fa-fw', 'fa-expand', MapUtil.config.mapMaximizeIconClass].join(' ')
+            }).attr('title', 'maximize map').tooltip({
+                placement: 'right',
+                container: 'body',
+                delay: 150
+            }).on('click', e => {
+                $(e.currentTarget).tooltip('hide');
+                MapUtil.toggleMapMaximized($(e.currentTarget).closest('.' + Util.getMapTabContentAreaClass('map')));
+            })
+        );
+    };
+
+    /**
      * init all map overlays on a "parent" element
      * @returns {*}
      */
@@ -852,6 +873,8 @@ define([
 
 
             parentElement.append(initZoomOverlay());
+
+            parentElement.append(initMaximizeOverlay());
 
             // --------------------------------------------------------------------------------------------------------
             // add map overlay info. after scrollbar is initialized

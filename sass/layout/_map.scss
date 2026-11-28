@@ -43,6 +43,30 @@ $mapBubbleWidth:        30px;
     height: 36px;
   }
 
+  // "maximize map" button, above the zoom overlay
+  &.pf-map-overlay-maximize{
+    bottom: $mapOverlayBottom + 52px + 5px;
+    left: $mapOverlayLeft;
+    width: 26px;
+    height: 26px;
+    padding: 2px 0;
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    line-height: 22px;
+
+    i{
+      cursor: pointer;
+      color: colors.$gray-light;
+      @include mixins.transition(color .18s ease-in-out);
+      will-change: color;
+
+      &:hover{
+        color: colors.$orange-dark;
+      }
+    }
+  }
+
   &.pf-map-overlay-zoom{
     bottom: $mapOverlayBottom;
     left: $mapOverlayLeft;

@@ -17,6 +17,7 @@ define([
         mapOverlayClass: 'pf-map-overlay',                                                  // class for all map overlays
         mapOverlayTimerClass: 'pf-map-overlay-timer',                                       // class for map overlay timer e.g. map timer
         mapOverlayZoomClass: 'pf-map-overlay-zoom',                                         // class for map overlay zoom
+        mapOverlayMaximizeClass: 'pf-map-overlay-maximize',                                 // class for map overlay "maximize map" button
         mapOverlayInfoClass: 'pf-map-overlay-info',                                         // class for map overlay info e.g. map info
         overlayLocalClass: 'pf-map-overlay-local',                                          // class for map overlay "local" table
 
