@@ -508,8 +508,6 @@ define([
                 userCharacterImageClass:    config.userCharacterImageClass,
                 usersActiveClass:           config.headActiveUsersClass,
                 userLocationId:             Util.config.headUserLocationId,
-                mapCenterId:                Util.config.headMapCenterId,
-                mapAutoCenterId:            Util.config.headMapAutoCenterId,
                 mapTrackingId:              Util.config.headMapTrackingId
             };
 
@@ -532,25 +530,6 @@ define([
             // active pilots
             $('.' + config.headActiveUsersClass).on('click', () => {
                 Util.triggerMenuAction(document, 'ShowMapInfo', {tab: 'activity'});
-            });
-
-            // center active map on my system
-            $('#' + Util.config.headMapCenterId).on('click', () => {
-                let activeMap = Util.getMapModule().getActiveMap();
-                if(!activeMap || !MapUtil.centerMapOnCurrentSystem(activeMap)){
-                    Util.showNotify({title: 'Center on my system', text: 'Your current system is not on this map', type: 'info'});
-                }
-            });
-
-            // auto center map on system change (on/off) -> stored per character
-            $('#' + Util.config.headMapAutoCenterId).on('click', e => {
-                MapUtil.setAutoCenter(!$(e.currentTarget).hasClass('active'));
-            });
-
-            Util.getLocalStore('character').getItem(Util.getCurrentCharacterId()).then(data => {
-                if(data && data.autoCenterMap){
-                    MapUtil.setAutoCenter(true, false);
-                }
             });
 
             // current location

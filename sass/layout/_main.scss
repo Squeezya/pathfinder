@@ -1933,22 +1933,6 @@ code {
     margin-top: 4px;
   }
 
-  // "center map on my system" buttons, next to the location breadcrumb
-  .pf-head-map-center{
-    margin-left: 5px;
-
-    i{
-      cursor: pointer;
-      color: colors.$gray-light;
-      @include mixins.transition( color 0.15s ease-out );
-      will-change: color;
-
-      &:hover, &.active{
-        color: colors.$orange-dark;
-      }
-    }
-  }
-
   // tooltips header
   .tooltip{
     .tooltip-inner{
