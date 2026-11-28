@@ -21,7 +21,6 @@ define([
         mapGridClass: 'pf-grid-small',                                  // class for map grid snapping
         systemRegionClass: 'pf-map-region',                             // class for systems regions on map
         systemCompactClass: 'pf-map-compact',                           // class for compact systems on map
-        mapAutoCenterIconClass: 'pf-map-overlay-auto-center-icon',      // class for the "auto center on my system" overlay icon
         mapAreaMaximizedClass: 'pf-map-tab-content-area-maximized',     // class for a map area expanded to the full browser window
         mapMaximizeIconClass: 'pf-map-overlay-maximize-icon',           // class for the "maximize map" overlay icon
 
@@ -1787,85 +1786,6 @@ define([
     };
 
     /**
-     * scroll a map so the system the current character is in is centered
-     * @param mapElement
-     * @returns {boolean}   true if the system is on this map (and was centered)
-     */
-    let centerMapOnCurrentSystem = mapElement => {
-        mapElement = $(mapElement);
-        let mapId = mapElement.data('id');
-        let ccpSystemId = Util.getCurrentCharacterData('log.system.id');
-        if(!mapId || !ccpSystemId){
-            return false;
-        }
-
-        let systemData = getSystemData(mapId, ccpSystemId, 'systemId');
-        if(!systemData){
-            return false;
-        }
-
-        let system = mapElement.find('#' + getSystemId(mapId, systemData.id));
-        if(system.length !== 1){
-            return false;
-        }
-
-        Scrollbar.scrollToCenter(mapElement.closest('.' + Util.getMapTabContentAreaClass('map')), system, true);
-        return true;
-    };
-
-    /**
-     * enable/disable "auto center on my system" for a map
-     * -> stored per map in local storage
-     * @param mapElement
-     * @param enabled
-     * @param store
-     */
-    let setMapAutoCenter = (mapElement, enabled, store = true) => {
-        mapElement = $(mapElement);
-        let mapId = mapElement.data('id');
-        enabled = Boolean(enabled);
-
-        mapElement.data('autoCenter', enabled);
-        // forget the last centered system -> center right away
-        mapElement.removeData('autoCenterSystemId');
-
-        mapElement.closest('.' + Util.getMapTabContentAreaClass('map'))
-            .find('.' + config.mapAutoCenterIconClass).toggleClass('active', enabled);
-
-        if(store && mapId){
-            if(enabled){
-                Util.getLocalStore('map').setItem(`${mapId}.autoCenter`, true);
-            }else{
-                Util.getLocalStore('map').removeItem(`${mapId}.autoCenter`);
-            }
-        }
-
-        if(enabled){
-            autoCenterMap(mapElement);
-        }
-    };
-
-    /**
-     * center map on the current character system, if "auto center" is enabled and the character changed system
-     * -> called on each user data update. If the new system is not on the map yet (e.g. added by map tracking
-     *    with the next map update), it is centered on a later call
-     * @param mapElement
-     */
-    let autoCenterMap = mapElement => {
-        mapElement = $(mapElement);
-        if(!mapElement.data('autoCenter')){
-            return;
-        }
-
-        let ccpSystemId = Util.getCurrentCharacterData('log.system.id');
-        if(ccpSystemId && ccpSystemId !== mapElement.data('autoCenterSystemId')){
-            if(centerMapOnCurrentSystem(mapElement)){
-                mapElement.data('autoCenterSystemId', ccpSystemId);
-            }
-        }
-    };
-
-    /**
      * set map "shortcut" events
      */
     $.fn.setMapShortcuts = function(){
@@ -2397,9 +2317,6 @@ define([
 
     return {
         config: config,
-        centerMapOnCurrentSystem: centerMapOnCurrentSystem,
-        setMapAutoCenter: setMapAutoCenter,
-        autoCenterMap: autoCenterMap,
         toggleMapMaximized: toggleMapMaximized,
         setMapInstance: setMapInstance,
         getMapInstance: getMapInstance,
