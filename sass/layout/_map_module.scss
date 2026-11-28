@@ -273,6 +273,7 @@ $mapModuleGridRowMinHeight: 38px;
         max-height: none;
         resize: none;
         border-radius: 0;
+        background: colors.$gray-darker; // opaque: the page modules (signatures, graphs, ...) are right behind it
 
         &:before {
           display: none; // hide resize handle
