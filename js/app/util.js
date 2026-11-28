@@ -56,7 +56,6 @@ define([
         // head
         headMapTrackingId: 'pf-head-map-tracking',                              // id for "map tracking" toggle (checkbox)
         headUserLocationId: 'pf-head-user-location',                            // id for "location" breadcrumb
-        headMapCenterId: 'pf-head-map-center',                                  // id for "center map on my system" button
         headMapAutoCenterId: 'pf-head-map-auto-center',                         // id for "auto center map on system change" toggle
 
         // menu
