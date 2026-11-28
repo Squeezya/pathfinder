@@ -3033,6 +3033,9 @@ define([
                 if(clearLocal){
                     mapOverlay.clearLocalTable();
                 }
+
+                // center map on the current system after a system change (if enabled)
+                MapUtil.autoCenterMap(mapElement);
             }
         });
     };
