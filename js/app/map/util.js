@@ -1717,29 +1717,58 @@ define([
         let mapElement = areaMap.find('.' + Util.config.mapClass);
         let map = getMapInstance(mapElement.data('id'));
 
+        // current scroll offset (px) and view center (unscaled map coordinates)
+        let container = areaMap.find('.mCSB_container');
+        let getScrollOffset = () => ({x: -container[0].offsetLeft || 0, y: -container[0].offsetTop || 0});
+        let scrollTo = offset => Scrollbar.scrollToPosition(areaMap, [Math.max(0, offset.y), Math.max(0, offset.x)], {
+            scrollInertia: 0,
+            timeout: 0
+        });
+        let scrollOffset = getScrollOffset();
+
+        if(map && maximize){
+            // remember the view -> restored when the map goes back to its normal size
+            areaMap.data('viewBeforeMaximize', {zoom: map.getZoom(), scrollOffset: scrollOffset});
+        }
+
+        let viewCenter = map && container.length ? {
+            x: (scrollOffset.x + container.parent().width() / 2) / map.getZoom(),
+            y: (scrollOffset.y + container.parent().height() / 2) / map.getZoom()
+        } : null;
+
         areaMap.toggleClass(config.mapAreaMaximizedClass, maximize);
 
         if(map){
-            if(maximize){
-                areaMap.data('zoomBeforeMaximize', map.getZoom());
+            // scrollbar wrapper takes the new size
+            areaMap.mCustomScrollbar('update');
 
-                // scrollbar wrapper takes the new (window) height
-                areaMap.mCustomScrollbar('update');
+            if(maximize){
                 let wrapperHeight = areaMap.find('.mCSB_container_wrapper').outerHeight();
                 let mapHeight = mapElement.outerHeight(); // unscaled map height
                 if(wrapperHeight && mapHeight){
                     let zoom = Math.floor(wrapperHeight / mapHeight * 100) / 100;
                     setZoom(map, Math.min(Math.max(zoom, config.zoomMin), config.zoomMax));
                 }
+
+                // keep the same part of the map in the middle of the view
+                if(viewCenter){
+                    let zoom = map.getZoom();
+                    scrollTo({
+                        x: viewCenter.x * zoom - container.parent().width() / 2,
+                        y: viewCenter.y * zoom - container.parent().height() / 2
+                    });
+                }
             }else{
-                let zoom = areaMap.data('zoomBeforeMaximize');
-                areaMap.removeData('zoomBeforeMaximize');
-                areaMap.mCustomScrollbar('update');
-                if(zoom){
-                    setZoom(map, zoom);
+                let view = areaMap.data('viewBeforeMaximize');
+                areaMap.removeData('viewBeforeMaximize');
+                if(view){
+                    setZoom(map, view.zoom);
+                    // back to the exact view from before maximizing
+                    scrollTo(view.scrollOffset);
                 }
             }
         }
+
         areaMap.find('.' + config.mapMaximizeIconClass)
             .toggleClass('fa-expand', !maximize)
             .toggleClass('fa-compress', maximize)
