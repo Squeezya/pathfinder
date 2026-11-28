@@ -239,10 +239,11 @@ define([
      * -> subtract some offset for tooltips/connections
      * @param scrollArea
      * @param element
+     * @param force     center even if the element is already fully visible
      */
-    let scrollToCenter = (scrollArea, element) => {
+    let scrollToCenter = (scrollArea, element, force = false) => {
         // no scroll if element is already FULL visible in scrollable viewport
-        if(!isInView(element)){
+        if(force || !isInView(element)){
             // get scrollTo position for centered element
             scrollToPosition(scrollArea, getCenterScrollPosition(element));
         }
